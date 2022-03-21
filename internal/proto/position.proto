@@ -1,0 +1,56 @@
+syntax= "proto3";
+
+package position_proto;
+
+option  go_package = "./positionpb";
+
+service PositionService {
+  rpc Close(PositionID) returns (Empty) {}
+  rpc Open(Position) returns (Empty) {}
+  rpc GetOpen(AccountID) returns (Positions) {}
+  rpc UpdatePrices(stream Price) returns (stream Empty) {}
+  rpc GetProfitLoss(AccountID) returns (stream ProfitLoss) {}
+}
+
+message Position {
+  string ID=1;
+  string AccountID=2;
+  string OrderID=3;
+  double OpenPrice=4;
+  double ClosePrice=5;
+  double TakeProfit=6;
+  double StopLoss=7;
+  string Symbol=8;
+  bool GuaranteedStopLoss=9;
+  string State=10;
+  double Quantity=11;
+  bool Leverage=12;
+  string Side=13;
+}
+
+message PositionID {
+  string value=1;
+}
+message ClosePrice {
+  double value=1;
+}
+
+message Empty {}
+
+message AccountID {
+  string value=1;
+}
+
+message Positions {
+  repeated Position value=1;
+}
+message Price {
+  string symbol=1;
+  double ask=2;
+  double bid=3;
+}
+
+message ProfitLoss {
+  string positionID=1;
+  double value=2;
+}
