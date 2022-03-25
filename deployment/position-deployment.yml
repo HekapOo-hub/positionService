@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dev-position-service
+  labels:
+    app: dev-position-service
+spec:
+  selector:
+    matchLabels:
+      app: dev-position-service
+  template:
+    metadata:
+      labels:
+        app: dev-position-service
+    spec:
+      containers:
+        - name: position
+          image: "vprokopenya/position:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: DB_NAME
+              value: positions-db
+            - name: POSTGRES_PORT
+              value: '5432'
+            - name: POSTGRES_USER
+              value: user
+            - name: POSTGRES_PASSWORD
+              value: "1234"
+            - name: POSTGRES_HOST
+              value: dev-position-service-db
+            - name: REDIS_ADDR
+              value: dev-position-service-cash:6379

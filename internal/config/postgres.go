@@ -2,13 +2,17 @@ package config
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/caarlos0/env/v6"
 )
 
 const (
+	// PostgresChannel is used by postgres trigger function by sending notifications to it
 	PostgresChannel = "events"
 )
 
+// PostgresConfig is used for dialing to postgres db
 type PostgresConfig struct {
 	UserName string `env:"POSTGRES_USER" envDefault:"vitalijprokopenya"`
 	Host     string `env:"POSTGRES_HOST" envDefault:"localhost"`
@@ -21,6 +25,7 @@ type PostgresConfig struct {
 // GetURL returns URL to connect to postgres database
 func (c *PostgresConfig) GetURL() string {
 	res := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", c.UserName, c.Password, c.Host, c.Port, c.DBName)
+	log.Info(res)
 	return res
 }
 

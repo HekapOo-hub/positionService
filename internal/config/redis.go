@@ -1,13 +1,14 @@
+// Package config contains configuration for connecting with redis and postgres
 package config
 
 import (
 	"fmt"
+
 	"github.com/caarlos0/env/v6"
 )
 
 const (
-	// RedisStream is a name of stream for RedisHumanCacheRepository to listen
-	RedisStream     = "prices"
+	// RedisCashStream is a name of stream which is used for updating account balance
 	RedisCashStream = "cash"
 )
 

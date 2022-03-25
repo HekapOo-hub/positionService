@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
+	"net"
+
 	"github.com/HekapOo-hub/positionService/internal/handler"
 	"github.com/HekapOo-hub/positionService/internal/proto/positionpb"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"net"
 )
 
 func main() {

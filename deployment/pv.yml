@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: dev-position-service-db-pv
+  labels:
+    env: dev
+spec:
+  capacity:
+    storage: 5Gi
+  hostPath:
+    path: /position-data
+    type: ''
+  storageClassName: "manual"
+  accessModes: ["ReadWriteOnce"]
+  claimRef:
+    name: dev-position-service-pvc
+    namespace: default

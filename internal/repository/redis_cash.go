@@ -1,17 +1,24 @@
+// Package repository consist of repositories for position service
 package repository
 
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"sync"
+
 	"github.com/HekapOo-hub/positionService/internal/config"
 	"github.com/go-redis/redis"
 	log "github.com/sirupsen/logrus"
-	"strconv"
-	"sync"
+)
+
+const (
+	startingBalance = 200
 )
 
 type CashRepository interface {
-	Update(accountId string, price float64) error
+	Update(accountID string, price float64) error
+	Get(accountID string) float64
 }
 type RedisCashRepository struct {
 	client *redis.Client
@@ -52,6 +59,14 @@ func (repo *RedisCashRepository) Update(accountID string, price float64) error {
 	return nil
 }
 
+func (repo *RedisCashRepository) Get(accountID string) float64 {
+	repo.mu.RLock()
+	defer repo.mu.RUnlock()
+	if balance, ok := repo.cache[accountID]; ok {
+		return balance
+	}
+	return startingBalance
+}
 func (repo *RedisCashRepository) listen(ctx context.Context) {
 	for {
 		select {
@@ -79,11 +94,10 @@ func (repo *RedisCashRepository) listen(ctx context.Context) {
 				}
 				_, ok := repo.cache[accID]
 				repo.mu.Lock()
-				if ok {
-					repo.cache[accID] += price
-				} else {
-					repo.cache[accID] = price
+				if !ok {
+					repo.cache[accID] = startingBalance
 				}
+				repo.cache[accID] += price
 				repo.mu.Unlock()
 			}
 		}

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dev-position-service-cash
+spec:
+  selector:
+    matchLabels:
+      app: dev-position-service-cash
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: dev-position-service-cash
+    spec:
+      containers:
+        - name: position-cash
+          image: redis:latest
+
+
+

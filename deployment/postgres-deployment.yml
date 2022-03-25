@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dev-position-service-db
+spec:
+  selector:
+    matchLabels:
+      app: dev-position-service-db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: dev-position-service-db
+    spec:
+      containers:
+        - name: position-db
+          image: postgres:latest
+          volumeMounts:
+            - name: dev-position-service-pvc
+              mountPath: /data
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dev-position-service-db-secret-config
+                  key: password
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_USER
+              value: user
+            - name: POSTGRES_DB
+              value: positions-db
+      volumes:
+        - name: dev-position-service-pvc
+          persistentVolumeClaim:
+            claimName: dev-position-service-pvc
+
+
+

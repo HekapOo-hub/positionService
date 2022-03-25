@@ -1,25 +1,29 @@
+// Package handler includes grpc handler for working with position service
 package handler
 
 import (
 	"context"
 	"fmt"
+	"io"
+
 	"github.com/HekapOo-hub/positionService/internal/model"
 	"github.com/HekapOo-hub/positionService/internal/proto/positionpb"
 	"github.com/HekapOo-hub/positionService/internal/service"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"time"
 )
 
 const (
+	// PositionPort is a port for position grpc server
 	PositionPort = ":50005"
 )
 
+// PositionHandler is a handler for grpc server for using position service
 type PositionHandler struct {
 	positionpb.UnimplementedPositionServiceServer
 	positionService *service.PositionService
 }
 
+// NewPositionHandler creates new instance of position handler
 func NewPositionHandler(ctx context.Context) (*PositionHandler, error) {
 	positionService, err := service.NewPositionService(ctx)
 	if err != nil {
@@ -32,6 +36,7 @@ func NewPositionHandler(ctx context.Context) (*PositionHandler, error) {
 	return &handler, nil
 }
 
+// Close is used for closing opened position
 func (h *PositionHandler) Close(ctx context.Context, id *positionpb.PositionID) (*positionpb.Empty, error) {
 	err := h.positionService.Close(ctx, id.Value)
 	if err != nil {
@@ -40,6 +45,7 @@ func (h *PositionHandler) Close(ctx context.Context, id *positionpb.PositionID) 
 	return &positionpb.Empty{}, nil
 }
 
+// Open is used for opening position
 func (h *PositionHandler) Open(ctx context.Context, position *positionpb.Position) (*positionpb.Empty, error) {
 	// create chan and pass it to channels
 	pos := model.Position{ID: position.ID, AccountID: position.AccountID, OrderID: position.OrderID,
@@ -54,21 +60,20 @@ func (h *PositionHandler) Open(ctx context.Context, position *positionpb.Positio
 	return &positionpb.Empty{}, nil
 }
 
+// GetOpen returns all open position with specified accountID
 func (h *PositionHandler) GetOpen(ctx context.Context, id *positionpb.AccountID) (*positionpb.Positions, error) {
-	openPositions, err := h.positionService.GetOpenByAccountID(ctx, id.Value)
-	if err != nil {
-		return nil, fmt.Errorf("position handler get open: %w", err)
-	}
+	openPositions := h.positionService.GetOpenByAccountID(id.Value)
 	protoOpenPositions := &positionpb.Positions{Value: make([]*positionpb.Position, 0)}
-	for _, position := range openPositions {
-		protoPosition := positionpb.Position{ID: position.ID, AccountID: position.AccountID, OrderID: position.OrderID,
-			OpenPrice: position.OpenPrice, ClosePrice: position.ClosePrice, TakeProfit: position.TakeProfit,
-			StopLoss: position.StopLoss, Symbol: position.Symbol, State: position.State}
+	for i := range openPositions {
+		protoPosition := positionpb.Position{ID: openPositions[i].ID, AccountID: openPositions[i].AccountID, OrderID: openPositions[i].OrderID,
+			OpenPrice: openPositions[i].OpenPrice, ClosePrice: openPositions[i].ClosePrice, TakeProfit: openPositions[i].TakeProfit,
+			StopLoss: openPositions[i].StopLoss, Symbol: openPositions[i].Symbol, State: openPositions[i].State}
 		protoOpenPositions.Value = append(protoOpenPositions.Value, &protoPosition)
 	}
 	return protoOpenPositions, nil
 }
 
+// UpdatePrices is called from orderService to update current price for open positions
 func (h *PositionHandler) UpdatePrices(stream positionpb.PositionService_UpdatePricesServer) error {
 	ctx := stream.Context()
 	for {
@@ -94,6 +99,7 @@ func (h *PositionHandler) UpdatePrices(stream positionpb.PositionService_UpdateP
 	}
 }
 
+// GetProfitLoss send into stream account's profit and loss for every open position
 func (h *PositionHandler) GetProfitLoss(accountID *positionpb.AccountID, stream positionpb.PositionService_GetProfitLossServer) error {
 	ctx := stream.Context()
 	for {
@@ -115,7 +121,6 @@ func (h *PositionHandler) GetProfitLoss(accountID *positionpb.AccountID, stream 
 					return fmt.Errorf("sending map with profit and loss position handler get profit and loss %w", streamErr)
 				}
 			}
-			time.Sleep(time.Millisecond * 200)
 		}
 	}
 }
